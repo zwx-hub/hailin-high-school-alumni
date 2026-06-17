@@ -538,7 +538,58 @@ app.get('/api/regions', async (req, res) => {
 app.post('/api/sms/send', async (req, res) => {
   return fail(res, 501, '短信验证码服务尚未接入。下一期接入阿里云或腾讯云短信。');
 });
+// 获取官网页面内容，例如 /api/site/home
+app.get('/api/site/:slug', async (req, res) => {
+  const slug = req.params.slug;
 
+  if (!pool) {
+    return res.status(500).json({
+      ok: false,
+      message: '数据库未配置'
+    });
+  }
+
+  try {
+    const pageResult = await pool.query(
+      `
+      select slug, title, description, current_content, sort_order
+      from public.site_pages
+      where slug = $1
+      limit 1
+      `,
+      [slug]
+    );
+
+    if (pageResult.rows.length === 0) {
+      return res.status(404).json({
+        ok: false,
+        message: '页面不存在'
+      });
+    }
+
+    const sectionsResult = await pool.query(
+      `
+      select section_key, section_name, content, display_order
+      from public.site_sections
+      where page_slug = $1
+      order by display_order asc
+      `,
+      [slug]
+    );
+
+    return res.json({
+      ok: true,
+      page: pageResult.rows[0],
+      sections: sectionsResult.rows
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      message: '获取页面内容失败',
+      error: error.message
+    });
+  }
+});
 app.use((req, res) => {
   fail(res, 404, '接口不存在');
 });
