@@ -15,13 +15,16 @@ const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-this-password';
 const TOKEN_SECRET = process.env.TOKEN_SECRET || 'dev-secret-change-me';
 const DATA_FILE = path.resolve(__dirname, process.env.DATA_FILE || './data/applications.json');
-const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
-
-const allowedOrigins = CORS_ORIGIN === '*'
-  ? true
-  : CORS_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean);
-
-app.use(cors({ origin: allowedOrigins }));
+// GitHub Pages + Render 跨域修复：允许所有来源访问此 API。
+// 后台只靠管理员密码和 token 控制，CORS 不再卡前端请求。
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+app.use(cors({ origin: true, methods: ['GET', 'POST', 'PATCH', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }));
 app.use(express.json({ limit: '1mb' }));
 
 async function ensureDataFile() {
@@ -101,6 +104,14 @@ function requireAdmin(req, res, next) {
 function cleanText(value, max = 300) {
   return String(value || '').trim().slice(0, max);
 }
+
+app.get('/', (req, res) => {
+  res.json({ ok: true, service: 'hailin-alumni-backend', message: '海林市高级中学校友会后端接口运行中' });
+});
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true, service: 'hailin-alumni-backend', port: PORT });
+});
 
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, service: 'hailin-alumni-backend', port: PORT });
