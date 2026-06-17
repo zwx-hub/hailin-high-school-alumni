@@ -606,3 +606,50 @@ ensureRootAdmin()
       console.log(`hailin alumni backend running without database init on http://localhost:${PORT}`);
     });
   });
+async function loadHomeContentFromApi() {
+  const apiBase = window.HAILIN_CONFIG?.API_BASE_URL || 'https://hailin-alumni-api.onrender.com';
+
+  try {
+    const res = await fetch(`${apiBase}/api/site/home?t=${Date.now()}`);
+    const data = await res.json();
+
+    if (!data.ok) {
+      console.warn('首页内容接口返回失败：', data);
+      return;
+    }
+
+    const sections = {};
+    data.sections.forEach(item => {
+      sections[item.section_key] = item.content;
+    });
+
+    const hero = sections.home_hero;
+    if (hero) {
+      const heroTitle = document.querySelector('.hero h1, .hero-title, h1');
+      const heroSubtitle = document.querySelector('.hero p, .hero-subtitle');
+
+      if (heroTitle && hero.title) heroTitle.textContent = hero.title;
+      if (heroSubtitle && hero.subtitle) heroSubtitle.textContent = hero.subtitle;
+    }
+
+    const notice = sections.home_notice;
+    if (notice) {
+      const noticeText = document.querySelector('.notice, .announcement, .home-notice');
+      if (noticeText && notice.text) noticeText.textContent = notice.text;
+    }
+
+    const stats = sections.home_stats;
+    if (stats) {
+      const statNumbers = document.querySelectorAll('.stat-number, .stats strong, .stats .number');
+      if (statNumbers.length >= 3) {
+        statNumbers[0].textContent = stats.founded || '1954';
+        statNumbers[1].textContent = stats.alumni || '30k+';
+        statNumbers[2].textContent = stats.regions || '12';
+      }
+    }
+  } catch (error) {
+    console.error('加载首页内容失败：', error);
+  }
+}
+
+loadHomeContentFromApi();
