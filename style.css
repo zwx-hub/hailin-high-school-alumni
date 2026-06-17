@@ -172,3 +172,47 @@ time { color: var(--accent); font-weight: 700; font-size: 14px; }
   .join-card { padding: 28px; border-radius: 22px; }
   .copyright { flex-direction: column; }
 }
+
+/* 后台与表单接口版追加样式 */
+.brand-logo {
+  width: 58px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.85);
+  box-shadow: 0 8px 24px rgba(24,48,89,.24);
+  background: #fff;
+}
+
+.join-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+.join-form .full { grid-column: 1 / -1; }
+.join-form textarea {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font: inherit;
+  color: var(--ink);
+  resize: vertical;
+  min-height: 110px;
+}
+.join-form textarea:focus { outline: 2px solid rgba(154,107,47,.18); border-color: var(--accent); }
+.join-form button { justify-self: start; }
+.form-status {
+  margin: 10px 0 0;
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 14px;
+}
+.form-status.success { color: #166534; }
+.form-status.error { color: #b91c1c; }
+
+@media (max-width: 980px) {
+  .join-form { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .brand-logo { width: 46px; height: 46px; }
+}

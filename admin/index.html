@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>管理员后台 - 海林市高级中学校友会</title>
+  <link rel="stylesheet" href="admin.css" />
+  <script src="../config.js"></script>
+</head>
+<body>
+  <header class="admin-header">
+    <div class="brand">
+      <img src="../assets/haigao-logo.jpg" alt="海林市高级中学校徽" />
+      <div>
+        <strong>海林市高级中学校友会</strong>
+        <span>管理员后台</span>
+      </div>
+    </div>
+    <a href="../">返回官网</a>
+  </header>
+
+  <main class="admin-shell">
+    <section class="login-card" id="loginPanel">
+      <h1>管理员登录</h1>
+      <p>用于查看校友登记表单、审批申请。</p>
+      <form id="loginForm">
+        <label>管理员账号<input name="username" autocomplete="username" placeholder="admin" required /></label>
+        <label>管理员密码<input name="password" type="password" autocomplete="current-password" required /></label>
+        <button type="submit">登录后台</button>
+        <p class="status" id="loginStatus"></p>
+      </form>
+    </section>
+
+    <section class="dashboard" id="dashboard" hidden>
+      <div class="dashboard-head">
+        <div>
+          <p>Dashboard</p>
+          <h1>校友登记审批</h1>
+        </div>
+        <div class="actions">
+          <button id="refreshBtn" type="button">刷新数据</button>
+          <button id="logoutBtn" type="button" class="ghost">退出登录</button>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <article><span id="totalCount">0</span><small>全部申请</small></article>
+        <article><span id="pendingCount">0</span><small>待审核</small></article>
+        <article><span id="approvedCount">0</span><small>已通过</small></article>
+        <article><span id="rejectedCount">0</span><small>已拒绝</small></article>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>姓名</th>
+              <th>届别/班级</th>
+              <th>联系方式</th>
+              <th>城市</th>
+              <th>留言</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="applicationRows">
+            <tr><td colspan="7">暂无数据</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>

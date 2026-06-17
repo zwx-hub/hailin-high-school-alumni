@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>海林市高级中学校友会(新海高人)</title>
-  <meta name="description" content="一日归属海高 一生念念不忘" />
+  <title>海林市高级中学校友会官方网站</title>
+  <meta name="description" content="海林市高级中学校友会官方网站，连接母校、凝聚校友、服务社会。" />
   <link rel="stylesheet" href="style.css" />
+  <script src="config.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳转到正文</a>
@@ -13,20 +14,21 @@
   <header class="site-header" id="top">
     <div class="header-top">
       <div class="container top-inner">
-        <span>海林市高级中学校友会（新海高人）</span>
+        <span>海林市高级中学校友会</span>
         <nav aria-label="快捷链接">
           <a href="#join">加入校友会</a>
           <a href="#donate">支持母校</a>
           <a href="#contact">联系我们</a>
+          <a href="admin/">管理员入口</a>
         </nav>
       </div>
     </div>
 
     <div class="container nav-wrap">
-      <a class="brand" href="#top" aria-label="海林市高级中学校友会（新海高人）首页">
-        <span class="brand-mark" aria-hidden="true">海</span>
+      <a class="brand" href="#top" aria-label="海林市高级中学校友会首页">
+        <img class="brand-logo" src="assets/haigao-logo.jpg" alt="海林市高级中学校徽" />
         <span class="brand-text">
-          <strong>海林市高级中学校友会（新海高人）</strong>
+          <strong>海林市高级中学校友会</strong>
           <small>Hailin Senior High School Alumni Association</small>
         </span>
       </a>
@@ -61,7 +63,7 @@
         </div>
       </div>
       <div class="hero-card" aria-label="校友会数据概览">
-        <div><strong>1984</strong><span>办学积淀</span></div>
+        <div><strong>1954</strong><span>办学积淀</span></div>
         <div><strong>30k+</strong><span>校友网络</span></div>
         <div><strong>12</strong><span>地区联络站</span></div>
       </div>
@@ -80,7 +82,7 @@
         <div>
           <p class="section-kicker">About Association</p>
           <h2>校友会概况</h2>
-          <p>海林市高级中学校友会（新海高人）以“联络校友、服务校友、回馈母校、振兴龙江”为宗旨，持续建设跨届别、跨行业、跨地域的校友共同体。</p>
+          <p>海林市高级中学校友会以“联络校友、服务校友、回馈母校、助力家乡”为宗旨，持续建设跨届别、跨行业、跨地域的校友共同体。</p>
           <p>网站采用原创高校门户设计语言，突出新闻发布、活动组织、校友服务与母校支持四项核心功能。</p>
         </div>
         <div class="about-grid">
@@ -119,7 +121,7 @@
             <div class="feature-img"></div>
             <div class="feature-body">
               <time datetime="2026-06-17">2026.06.17</time>
-              <h3>海林市高级中学校友会（新海高人）官方网站试运行</h3>
+              <h3>海林市高级中学校友会官方网站试运行</h3>
               <p>网站将逐步开放校友认证、活动报名、校友故事投稿和公益项目展示等功能。</p>
             </div>
           </article>
@@ -193,7 +195,7 @@
         <div class="story-grid">
           <article>
             <div class="avatar">A</div>
-            <h3>从这里走向世界</h3>
+            <h3>从雪乡走向世界</h3>
             <p>记录海高校友在科研、教育、医疗、企业与公共服务中的成长故事。</p>
           </article>
           <article>
@@ -234,10 +236,15 @@
           <p>欢迎历届毕业生、曾在海林市高级中学学习或工作的师生加入校友网络。</p>
         </div>
         <form class="join-form" aria-label="校友登记表单">
-          <label>姓名<input type="text" name="name" placeholder="请输入姓名" /></label>
-          <label>毕业届别<input type="text" name="year" placeholder="例如：2006届" /></label>
-          <label>联系电话<input type="tel" name="phone" placeholder="请输入联系电话" /></label>
+          <label>姓名<input type="text" name="name" placeholder="请输入姓名" required /></label>
+          <label>毕业届别<input type="text" name="year" placeholder="例如：2006届" required /></label>
+          <label>班级<input type="text" name="class_name" placeholder="例如：三年一班" /></label>
+          <label>所在城市<input type="text" name="city" placeholder="例如：哈尔滨" /></label>
+          <label>联系电话<input type="tel" name="phone" placeholder="请输入联系电话" required /></label>
+          <label>邮箱<input type="email" name="email" placeholder="用于接收审核通知" /></label>
+          <label class="full">留言<textarea name="message" rows="4" placeholder="可填写工作行业、所在地区、希望参与的校友活动"></textarea></label>
           <button class="btn primary" type="submit">提交登记</button>
+          <p class="form-status" role="status" aria-live="polite"></p>
         </form>
       </div>
     </section>
@@ -260,18 +267,19 @@
       </div>
       <div>
         <h3>联系方式</h3>
-        <p>邮箱：zwxzwx861@qq.com</p>
-        <p>地址：黑龙江省哈尔滨市南岗区</p>
+        <p>邮箱：alumni@example.com</p>
+        <p>地址：黑龙江省牡丹江市海林市</p>
       </div>
       <div>
         <h3>常用入口</h3>
         <a href="#join">校友登记</a>
         <a href="#events">活动报名</a>
         <a href="#news">新闻投稿</a>
+        <a href="admin/">管理员入口</a>
       </div>
     </div>
     <div class="container copyright">
-      <span>© 2026 海林市高级中学校友会（新海高人）. All Rights Reserved.</span>
+      <span>© 2026 海林市高级中学校友会. All Rights Reserved.</span>
       <a href="#top">返回顶部 ↑</a>
     </div>
   </footer>

@@ -1,20 +1,82 @@
-# 海林市高级中学校友会官方网站静态版
+# 海林市高级中学校友会官方网站：前台 + 后台接口版
 
-这是我校校友会网站。
+这是一个原创高校门户风格官网模板，包含：
 
-## 文件
+- GitHub Pages 前台静态网站
+- 管理员后台入口 `/admin/`
+- Node.js 后端接口服务 `/server/`
+- 校友登记表单提交接口
+- 管理员登录、查看、审批申请功能
 
-- `index.html`：页面结构
-- `style.css`：视觉样式与响应式布局
-- `script.js`：移动端菜单与表单模拟提交
+## 文件说明
 
-## 使用方式
+```text
+index.html          官网首页
+style.css           官网样式
+script.js           官网交互与表单提交
+config.js           前端接口地址配置
+assets/             图片资源
+admin/              管理员后台页面
+server/             Node.js 后端接口服务
+后台与接口说明.md    后台入口、接口、端口说明
+```
 
-直接打开 `index.html` 即可预览。上线时可部署到 Nginx、Apache、GitHub Pages、Cloudflare Pages、Vercel 或学校自有服务器。
+## 前台部署到 GitHub Pages
 
-## 替换建议
+把根目录里的这些内容上传到 GitHub 仓库根目录：
 
-1. 将邮箱、地址、联系方式替换为真实信息。
-2. 将新闻、活动、校友故事替换为真实内容。
-3. 若需使用校徽、校门、校园照片，请确认拥有授权或使用自有素材。
-4. 正式上线前补充备案号、隐私政策、内容管理后台和表单后端。
+```text
+index.html
+style.css
+script.js
+config.js
+assets/
+admin/
+README.md
+后台与接口说明.md
+```
+
+然后在 GitHub：
+
+```text
+Settings → Pages → Deploy from a branch → main → / root → Save
+```
+
+管理员入口：
+
+```text
+https://zxw-hub.github.io/hailin-high-school-alumni/admin/
+```
+
+## 后端部署
+
+GitHub Pages 不能运行后端，所以 `server/` 需要单独部署到 Node.js 服务器。
+
+本地测试：
+
+```bash
+cd server
+npm install
+cp .env.example .env
+npm start
+```
+
+默认端口：
+
+```text
+3000
+```
+
+本地接口：
+
+```text
+http://localhost:3000/api/applications
+```
+
+后端上线后，修改 `config.js`：
+
+```js
+window.HAILIN_CONFIG = {
+  API_BASE_URL: "你的后端服务地址"
+};
+```

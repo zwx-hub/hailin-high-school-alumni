@@ -15,10 +15,42 @@ if (toggle && nav) {
   });
 }
 
+const API_BASE_URL = window.HAILIN_CONFIG?.API_BASE_URL || 'http://localhost:3000';
 const form = document.querySelector('.join-form');
+
+function setFormStatus(message, type = '') {
+  const status = form?.querySelector('.form-status');
+  if (!status) return;
+  status.textContent = message;
+  status.className = `form-status ${type}`.trim();
+}
+
 if (form) {
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    alert('登记信息已模拟提交。正式上线时请接入后端接口或表单服务。');
+    const submitButton = form.querySelector('button[type="submit"]');
+    const formData = new FormData(form);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+      submitButton.disabled = true;
+      setFormStatus('正在提交，请稍候……');
+
+      const response = await fetch(`${API_BASE_URL}/api/applications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.message || '提交失败，请稍后再试');
+
+      form.reset();
+      setFormStatus('提交成功，管理员审核后会与你联系。', 'success');
+    } catch (error) {
+      setFormStatus(`提交失败：${error.message}。请确认后端接口已启动，或联系管理员。`, 'error');
+    } finally {
+      submitButton.disabled = false;
+    }
   });
 }
