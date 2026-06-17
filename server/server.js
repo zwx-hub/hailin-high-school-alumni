@@ -15,10 +15,9 @@ const DATABASE_URL = process.env.DATABASE_URL || '';
 const pool = DATABASE_URL
   ? new Pool({
       connectionString: DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
+      ssl: {
+        rejectUnauthorized: false
+      }
     })
   : null;
 
