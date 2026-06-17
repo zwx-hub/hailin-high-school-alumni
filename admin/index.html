@@ -22,7 +22,7 @@
   <main class="admin-shell">
     <section class="login-card" id="loginPanel">
       <h1>管理员登录</h1>
-      <p>用于查看校友登记表单、审批申请。</p>
+      <p>主管理员可直接修改官网内容；普通管理员提交后等待主管理员审批。</p>
       <form id="loginForm">
         <label>管理员账号<input name="username" autocomplete="username" placeholder="admin" required /></label>
         <label>管理员密码<input name="password" type="password" autocomplete="current-password" required /></label>
@@ -35,7 +35,8 @@
       <div class="dashboard-head">
         <div>
           <p>Dashboard</p>
-          <h1>校友登记审批</h1>
+          <h1>后台管理</h1>
+          <small id="userInfo">已登录</small>
         </div>
         <div class="actions">
           <button id="refreshBtn" type="button">刷新数据</button>
@@ -43,31 +44,109 @@
         </div>
       </div>
 
-      <div class="summary-grid">
-        <article><span id="totalCount">0</span><small>全部申请</small></article>
-        <article><span id="pendingCount">0</span><small>待审核</small></article>
-        <article><span id="approvedCount">0</span><small>已通过</small></article>
-        <article><span id="rejectedCount">0</span><small>已拒绝</small></article>
-      </div>
+      <nav class="tabs" aria-label="后台功能">
+        <button class="tab active" data-tab="applications" type="button">校友认证审批</button>
+        <button class="tab" data-tab="homeEditor" type="button">编辑官网首页</button>
+        <button class="tab" data-tab="contentRequests" type="button">内容修改审批</button>
+      </nav>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>姓名</th>
-              <th>届别/班级</th>
-              <th>联系方式</th>
-              <th>城市</th>
-              <th>留言</th>
-              <th>状态</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="applicationRows">
-            <tr><td colspan="7">暂无数据</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <section class="panel active" id="applicationsPanel">
+        <div class="summary-grid">
+          <article><span id="totalCount">0</span><small>全部申请</small></article>
+          <article><span id="pendingCount">0</span><small>待审核</small></article>
+          <article><span id="approvedCount">0</span><small>已通过</small></article>
+          <article><span id="rejectedCount">0</span><small>已拒绝</small></article>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>姓名</th>
+                <th>类型/班级</th>
+                <th>地区</th>
+                <th>联系方式</th>
+                <th>证明材料</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="applicationRows">
+              <tr><td colspan="7">暂无数据</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="homeEditorPanel">
+        <div class="editor-card">
+          <div class="section-title">
+            <div>
+              <h2>官网首页内容</h2>
+              <p>修改后，主管理员会直接发布；普通管理员会生成审批任务。</p>
+            </div>
+            <button id="loadHomeBtn" type="button" class="ghost">读取当前首页</button>
+          </div>
+
+          <form id="homeForm" class="editor-form">
+            <fieldset>
+              <legend>首页横幅</legend>
+              <label>主标题
+                <textarea name="hero_title" rows="2" placeholder="共忆青春海高路&#10;同筑未来校友情"></textarea>
+              </label>
+              <label>副标题
+                <textarea name="hero_subtitle" rows="3" placeholder="这里是海林市高级中学校友共同的精神家园……"></textarea>
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>公告</legend>
+              <label>公告文字
+                <textarea name="notice_text" rows="2" placeholder="2026年校友返校日筹备启动，欢迎各届校友报名参与志愿服务。"></textarea>
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>首页数据</legend>
+              <div class="three-fields">
+                <label>办学积淀<input name="stats_founded" placeholder="1954" /></label>
+                <label>校友网络<input name="stats_alumni" placeholder="30k+" /></label>
+                <label>地区联络站<input name="stats_regions" placeholder="12" /></label>
+              </div>
+            </fieldset>
+
+            <button type="submit">保存首页内容</button>
+            <p class="status" id="homeStatus"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel" id="contentRequestsPanel">
+        <div class="section-title">
+          <div>
+            <h2>内容修改审批</h2>
+            <p>普通管理员提交的网站内容修改，会出现在这里。</p>
+          </div>
+          <button id="loadRequestsBtn" type="button" class="ghost">刷新审批</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>标题</th>
+                <th>页面/区块</th>
+                <th>提交内容</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="requestRows">
+              <tr><td colspan="5">暂无数据</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </main>
 
