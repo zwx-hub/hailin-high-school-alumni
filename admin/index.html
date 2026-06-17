@@ -31,6 +31,23 @@
       </form>
     </section>
 
+    <section class="login-card" id="invitePanel" hidden>
+      <h1>接受管理员邀请</h1>
+      <p>请填写个人信息并设置后台登录密码。提交后需主管理员审批，审批通过后才能登录后台。</p>
+      <form id="acceptInviteForm">
+        <input type="hidden" name="code" />
+        <label>邀请邮箱<input name="email" type="email" autocomplete="email" readonly /></label>
+        <label>姓名<input name="name" autocomplete="name" required /></label>
+        <label>联系电话<input name="phone" autocomplete="tel" placeholder="可选" /></label>
+        <label>职务/身份<input name="title" placeholder="如：校友联络员、秘书处成员" /></label>
+        <label>所在部门/地区<input name="department" placeholder="如：北京校友联络站" /></label>
+        <label>设置密码<input name="password" type="password" autocomplete="new-password" minlength="8" required /></label>
+        <button type="submit">提交资料并等待审批</button>
+        <p class="status" id="inviteAcceptStatus"></p>
+      </form>
+      <p><button id="backToLoginBtn" class="ghost" type="button">返回登录</button></p>
+
+
     <section class="dashboard" id="dashboard" hidden>
       <div class="dashboard-head">
         <div>
@@ -48,6 +65,8 @@
         <button class="tab active" data-tab="applications" type="button">校友认证审批</button>
         <button class="tab" data-tab="homeEditor" type="button">编辑官网首页</button>
         <button class="tab" data-tab="contentRequests" type="button">内容修改审批</button>
+        <button class="tab" data-tab="admins" type="button">管理员管理</button>
+        <button class="tab" data-tab="account" type="button">我的账号</button>
       </nav>
 
       <section class="panel active" id="applicationsPanel">
@@ -145,6 +164,111 @@
               <tr><td colspan="5">暂无数据</td></tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section class="panel" id="adminsPanel">
+        <div class="section-title">
+          <div>
+            <h2>管理员管理</h2>
+            <p>免费邀请制：生成邀请链接，复制给对方。对方设置密码后，由主管理员审批启用。</p>
+          </div>
+          <button id="loadAdminsBtn" type="button" class="ghost">刷新管理员</button>
+        </div>
+
+        <div class="editor-card compact-card">
+          <h3>邀请管理员</h3>
+          <form id="inviteAdminForm" class="editor-form">
+            <div class="three-fields">
+              <label>邮箱<input name="invitee_email" type="email" placeholder="name@example.com" required /></label>
+              <label>姓名<input name="invitee_name" required /></label>
+              <label>联系电话<input name="invitee_phone" placeholder="可选" /></label>
+            </div>
+            <div class="three-fields">
+              <label>权限级别
+                <select name="admin_level">
+                  <option value="admin">普通管理员</option>
+                  <option value="editor">内容编辑员</option>
+                  <option value="reviewer">审核员</option>
+                  <option value="viewer">只读查看</option>
+                </select>
+              </label>
+              <label>职务/身份<input name="title" placeholder="如：联络员" /></label>
+              <label>部门/地区<input name="department" placeholder="如：北京校友联络站" /></label>
+            </div>
+            <button type="submit">生成邀请链接</button>
+            <p class="status" id="inviteStatus"></p>
+            <label>邀请链接<textarea id="inviteLinkOutput" rows="2" readonly placeholder="生成后复制给对方"></textarea></label>
+          </form>
+        </div>
+
+        <div class="table-wrap spaced-table">
+          <table>
+            <thead>
+              <tr>
+                <th>姓名/邮箱</th>
+                <th>级别</th>
+                <th>状态</th>
+                <th>邀请链接</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="inviteRows"><tr><td colspan="5">暂无邀请</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="table-wrap spaced-table">
+          <table>
+            <thead>
+              <tr>
+                <th>管理员</th>
+                <th>联系方式</th>
+                <th>级别/状态</th>
+                <th>职务/地区</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="adminRows"><tr><td colspan="5">暂无管理员</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="accountPanel">
+        <div class="editor-card">
+          <div class="section-title">
+            <div>
+              <h2>我的账号</h2>
+              <p>管理员可以自己维护个人信息和修改密码。</p>
+            </div>
+          </div>
+          <form id="profileForm" class="editor-form">
+            <div class="three-fields">
+              <label>姓名<input name="display_name" required /></label>
+              <label>邮箱<input name="email" type="email" /></label>
+              <label>联系电话<input name="phone" /></label>
+            </div>
+            <div class="three-fields">
+              <label>职务/身份<input name="title" /></label>
+              <label>部门/地区<input name="department" /></label>
+              <label>城市<input name="city" /></label>
+            </div>
+            <label>备注<textarea name="note" rows="2"></textarea></label>
+            <button type="submit">保存个人信息</button>
+            <p class="status" id="profileStatus"></p>
+          </form>
+        </div>
+
+        <div class="editor-card compact-card">
+          <h3>修改密码</h3>
+          <form id="passwordForm" class="editor-form">
+            <div class="three-fields">
+              <label>原密码<input name="old_password" type="password" autocomplete="current-password" placeholder="首次设置可留空" /></label>
+              <label>新密码<input name="password" type="password" autocomplete="new-password" minlength="8" required /></label>
+              <label>确认新密码<input name="password_confirm" type="password" autocomplete="new-password" minlength="8" required /></label>
+            </div>
+            <button type="submit">修改密码</button>
+            <p class="status" id="passwordStatus"></p>
+          </form>
         </div>
       </section>
     </section>

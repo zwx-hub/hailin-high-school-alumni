@@ -17,6 +17,20 @@ const homeForm = document.querySelector('#homeForm');
 const homeStatus = document.querySelector('#homeStatus');
 const loadHomeBtn = document.querySelector('#loadHomeBtn');
 const loadRequestsBtn = document.querySelector('#loadRequestsBtn');
+const invitePanel = document.querySelector('#invitePanel');
+const acceptInviteForm = document.querySelector('#acceptInviteForm');
+const inviteAcceptStatus = document.querySelector('#inviteAcceptStatus');
+const backToLoginBtn = document.querySelector('#backToLoginBtn');
+const inviteAdminForm = document.querySelector('#inviteAdminForm');
+const inviteStatus = document.querySelector('#inviteStatus');
+const inviteLinkOutput = document.querySelector('#inviteLinkOutput');
+const inviteRows = document.querySelector('#inviteRows');
+const adminRows = document.querySelector('#adminRows');
+const loadAdminsBtn = document.querySelector('#loadAdminsBtn');
+const profileForm = document.querySelector('#profileForm');
+const profileStatus = document.querySelector('#profileStatus');
+const passwordForm = document.querySelector('#passwordForm');
+const passwordStatus = document.querySelector('#passwordStatus');
 
 function getToken() { return localStorage.getItem(tokenKey); }
 function setToken(token) { localStorage.setItem(tokenKey, token); }
@@ -27,12 +41,20 @@ function setUser(user) { localStorage.setItem(userKey, JSON.stringify(user || {}
 function showDashboard() {
   const user = getUser();
   loginPanel.hidden = true;
+  if (invitePanel) invitePanel.hidden = true;
   dashboard.hidden = false;
   userInfo.textContent = user.name ? `当前账号：${user.name}（${user.role || ''}${user.admin_level ? ' / ' + user.admin_level : ''}）` : '已登录';
 }
 
 function showLogin() {
   loginPanel.hidden = false;
+  if (invitePanel) invitePanel.hidden = true;
+  dashboard.hidden = true;
+}
+
+function showInvitePanel() {
+  loginPanel.hidden = true;
+  if (invitePanel) invitePanel.hidden = false;
   dashboard.hidden = true;
 }
 
@@ -51,7 +73,10 @@ function statusText(status) {
     approved: '已通过',
     rejected: '已拒绝',
     need_more_info: '需补充材料',
-    active: '启用'
+    active: '启用',
+    invited: '已邀请',
+    accepted: '待主管理员审批',
+    disabled: '已停用'
   }[status] || status || '未知';
 }
 
@@ -90,6 +115,8 @@ function setActiveTab(tabName) {
   if (tabName === 'applications') loadApplications();
   if (tabName === 'homeEditor') loadHomeContent();
   if (tabName === 'contentRequests') loadContentRequests();
+  if (tabName === 'admins') loadAdminManagement();
+  if (tabName === 'account') loadMyAccount();
 }
 
 tabs.forEach(tab => tab.addEventListener('click', () => setActiveTab(tab.dataset.tab)));
@@ -262,6 +289,124 @@ async function loadContentRequests() {
   }
 }
 
+
+function adminLevelText(level) {
+  return {
+    super_admin: '主管理员',
+    admin: '普通管理员',
+    editor: '内容编辑员',
+    reviewer: '审核员',
+    viewer: '只读查看'
+  }[level] || level || '普通管理员';
+}
+
+async function loadAdminManagement() {
+  await Promise.allSettled([loadAdmins(), loadInvites()]);
+}
+
+async function loadAdmins() {
+  if (!adminRows) return;
+  adminRows.innerHTML = '<tr><td colspan="5">正在加载……</td></tr>';
+  try {
+    const data = await api('/api/admin/accounts');
+    const items = data.admins || [];
+    if (!items.length) {
+      adminRows.innerHTML = '<tr><td colspan="5">暂无管理员</td></tr>';
+      return;
+    }
+    adminRows.innerHTML = items.map(item => `
+      <tr>
+        <td>${escapeHtml(item.display_name || '')}<br><small>${escapeHtml(item.email || '')}</small></td>
+        <td>${escapeHtml(item.phone || '')}</td>
+        <td>
+          <select class="level-select" data-admin-level-id="${item.admin_id}" ${item.admin_level === 'super_admin' ? 'disabled' : ''}>
+            ${['admin','editor','reviewer','viewer','super_admin'].map(level => `<option value="${level}" ${item.admin_level === level ? 'selected' : ''}>${adminLevelText(level)}</option>`).join('')}
+          </select>
+          <br>
+          <span class="badge ${escapeHtml(item.admin_status)}">${statusText(item.admin_status)}</span>
+        </td>
+        <td>${escapeHtml(item.title || '')}<br>${escapeHtml([item.department, item.province, item.city].filter(Boolean).join(' / '))}</td>
+        <td>
+          <div class="row-actions">
+            <button class="ghost" data-save-admin-id="${item.admin_id}" ${item.admin_level === 'super_admin' ? 'disabled' : ''}>保存权限</button>
+            <button class="reject" data-disable-admin-id="${item.admin_id}" ${item.admin_level === 'super_admin' ? 'disabled' : ''}>停用</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    adminRows.innerHTML = `<tr><td colspan="5">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+
+async function loadInvites() {
+  if (!inviteRows) return;
+  inviteRows.innerHTML = '<tr><td colspan="5">正在加载……</td></tr>';
+  try {
+    const data = await api('/api/admin/invites');
+    const items = data.invites || [];
+    if (!items.length) {
+      inviteRows.innerHTML = '<tr><td colspan="5">暂无邀请</td></tr>';
+      return;
+    }
+    inviteRows.innerHTML = items.map(item => `
+      <tr>
+        <td>${escapeHtml(item.invitee_name || '')}<br><small>${escapeHtml(item.invitee_email || '')}</small></td>
+        <td>${adminLevelText(item.admin_level)}</td>
+        <td><span class="badge ${escapeHtml(item.status)}">${statusText(item.status)}</span></td>
+        <td>
+          ${item.invite_link ? `<div class="mono-link">${escapeHtml(item.invite_link)}</div><button class="ghost copy-link" data-copy-link="${escapeHtml(item.invite_link)}">复制</button>` : '无'}
+          <div class="invite-hint">已接受后，主管理员点“批准启用”。</div>
+        </td>
+        <td>
+          <div class="row-actions">
+            <button class="approve" data-invite-review-id="${item.id}" data-status="approved" ${item.status !== 'accepted' ? 'disabled' : ''}>批准启用</button>
+            <button class="reject" data-invite-review-id="${item.id}" data-status="rejected" ${['approved','rejected'].includes(item.status) ? 'disabled' : ''}>拒绝</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    inviteRows.innerHTML = `<tr><td colspan="5">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+
+async function loadMyAccount() {
+  if (!profileForm) return;
+  try {
+    const data = await api('/api/admin/me');
+    const u = data.user || {};
+    profileForm.display_name.value = u.display_name || u.name || '';
+    profileForm.email.value = u.email || '';
+    profileForm.phone.value = u.phone || '';
+  } catch (_) {}
+}
+
+async function setupInviteFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const code = params.get('invite');
+  if (!code || !acceptInviteForm) return false;
+  showInvitePanel();
+  inviteAcceptStatus.textContent = '正在读取邀请……';
+  try {
+    const data = await api(`/api/admin/invites/public/${encodeURIComponent(code)}`);
+    const invite = data.invite || {};
+    acceptInviteForm.code.value = code;
+    acceptInviteForm.email.value = invite.invitee_email || '';
+    acceptInviteForm.name.value = invite.invitee_name || '';
+    acceptInviteForm.phone.value = invite.invitee_phone || '';
+    acceptInviteForm.title.value = invite.title || '';
+    acceptInviteForm.department.value = invite.department || '';
+    inviteAcceptStatus.textContent = '邀请有效，请设置密码并提交。';
+    inviteAcceptStatus.className = 'status ok';
+    return true;
+  } catch (error) {
+    inviteAcceptStatus.textContent = error.message;
+    inviteAcceptStatus.className = 'status';
+    return true;
+  }
+}
+
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   loginStatus.textContent = '';
@@ -318,6 +463,134 @@ requestRows.addEventListener('click', async (event) => {
   }
 });
 
+
+if (inviteAdminForm) {
+  inviteAdminForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    inviteStatus.textContent = '正在生成邀请……';
+    inviteStatus.className = 'status';
+    inviteLinkOutput.value = '';
+    try {
+      const body = Object.fromEntries(new FormData(inviteAdminForm).entries());
+      const data = await api('/api/admin/invites', { method: 'POST', body: JSON.stringify(body) });
+      inviteStatus.textContent = data.message || '邀请已创建';
+      inviteStatus.className = 'status ok';
+      inviteLinkOutput.value = data.invite?.invite_link || '';
+      await loadInvites();
+    } catch (error) {
+      inviteStatus.textContent = error.message;
+      inviteStatus.className = 'status';
+    }
+  });
+}
+
+if (acceptInviteForm) {
+  acceptInviteForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    inviteAcceptStatus.textContent = '正在提交……';
+    inviteAcceptStatus.className = 'status';
+    try {
+      const body = Object.fromEntries(new FormData(acceptInviteForm).entries());
+      const data = await api('/api/admin/invites/accept', { method: 'POST', body: JSON.stringify(body) });
+      inviteAcceptStatus.textContent = data.message || '已提交，等待审批';
+      inviteAcceptStatus.className = 'status ok';
+      acceptInviteForm.querySelector('button[type="submit"]').disabled = true;
+    } catch (error) {
+      inviteAcceptStatus.textContent = error.message;
+      inviteAcceptStatus.className = 'status';
+    }
+  });
+}
+
+if (backToLoginBtn) backToLoginBtn.addEventListener('click', showLogin);
+
+if (inviteRows) {
+  inviteRows.addEventListener('click', async (event) => {
+    const copy = event.target.closest('button[data-copy-link]');
+    if (copy) {
+      await navigator.clipboard.writeText(copy.dataset.copyLink);
+      copy.textContent = '已复制';
+      setTimeout(() => copy.textContent = '复制', 1200);
+      return;
+    }
+    const button = event.target.closest('button[data-invite-review-id]');
+    if (!button) return;
+    const reason = button.dataset.status === 'rejected' ? prompt('请输入拒绝原因，可留空：') : '';
+    button.disabled = true;
+    try {
+      await api(`/api/admin/invites/${button.dataset.inviteReviewId}/review`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: button.dataset.status, reject_reason: reason || null })
+      });
+      await loadAdminManagement();
+    } catch (error) {
+      alert(error.message);
+      button.disabled = false;
+    }
+  });
+}
+
+if (adminRows) {
+  adminRows.addEventListener('click', async (event) => {
+    const save = event.target.closest('button[data-save-admin-id]');
+    const disable = event.target.closest('button[data-disable-admin-id]');
+    if (!save && !disable) return;
+    const id = (save || disable).dataset.saveAdminId || (save || disable).dataset.disableAdminId;
+    const row = (save || disable).closest('tr');
+    const level = row.querySelector('[data-admin-level-id]')?.value;
+    try {
+      await api(`/api/admin/accounts/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(disable ? { status: 'disabled' } : { admin_level: level })
+      });
+      await loadAdmins();
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+}
+
+if (profileForm) {
+  profileForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    profileStatus.textContent = '正在保存……';
+    profileStatus.className = 'status';
+    try {
+      const body = Object.fromEntries(new FormData(profileForm).entries());
+      const data = await api('/api/admin/account/profile', { method: 'PATCH', body: JSON.stringify(body) });
+      profileStatus.textContent = data.message || '已保存';
+      profileStatus.className = 'status ok';
+    } catch (error) {
+      profileStatus.textContent = error.message;
+      profileStatus.className = 'status';
+    }
+  });
+}
+
+if (passwordForm) {
+  passwordForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    passwordStatus.textContent = '正在修改……';
+    passwordStatus.className = 'status';
+    const body = Object.fromEntries(new FormData(passwordForm).entries());
+    if (body.password !== body.password_confirm) {
+      passwordStatus.textContent = '两次新密码不一致';
+      return;
+    }
+    try {
+      const data = await api('/api/admin/account/password', { method: 'POST', body: JSON.stringify(body) });
+      passwordStatus.textContent = data.message || '密码已修改';
+      passwordStatus.className = 'status ok';
+      passwordForm.reset();
+    } catch (error) {
+      passwordStatus.textContent = error.message;
+      passwordStatus.className = 'status';
+    }
+  });
+}
+
+if (loadAdminsBtn) loadAdminsBtn.addEventListener('click', loadAdminManagement);
+
 refreshBtn.addEventListener('click', () => {
   const active = document.querySelector('.tab.active')?.dataset.tab || 'applications';
   setActiveTab(active);
@@ -329,9 +602,12 @@ logoutBtn.addEventListener('click', () => {
   showLogin();
 });
 
-if (getToken()) {
-  showDashboard();
-  Promise.allSettled([loadApplications(), loadHomeContent(), loadContentRequests()]);
-} else {
-  showLogin();
-}
+setupInviteFromUrl().then((handled) => {
+  if (handled) return;
+  if (getToken()) {
+    showDashboard();
+    Promise.allSettled([loadApplications(), loadHomeContent(), loadContentRequests()]);
+  } else {
+    showLogin();
+  }
+});
