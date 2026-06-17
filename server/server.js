@@ -13,12 +13,23 @@ const TOKEN_SECRET = process.env.TOKEN_SECRET || 'dev-secret-change-me';
 const DATABASE_URL = process.env.DATABASE_URL || '';
 
 const pool = DATABASE_URL
-  ? new Pool({
-      connectionString: DATABASE_URL,
-      ssl: {
-        rejectUnauthorized: false
-      }
-    })
+  ? (() => {
+      const dbUrl = new URL(DATABASE_URL);
+
+      return new Pool({
+        host: dbUrl.hostname,
+        port: Number(dbUrl.port || 5432),
+        database: dbUrl.pathname.replace('/', '') || 'postgres',
+        user: decodeURIComponent(dbUrl.username),
+        password: decodeURIComponent(dbUrl.password),
+        ssl: {
+          rejectUnauthorized: false
+        },
+        max: 5,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000
+      });
+    })()
   : null;
 
 // 强制放开跨域，避免 GitHub Pages -> Render 被浏览器拦截。
