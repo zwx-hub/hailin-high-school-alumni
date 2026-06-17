@@ -13,13 +13,23 @@ const TOKEN_SECRET = process.env.TOKEN_SECRET || 'dev-secret-change-me';
 const DATABASE_URL = process.env.DATABASE_URL || '';
 
 const pool = DATABASE_URL
-  ? new Pool({
-      connectionString: DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
-    })
+  ? (() => {
+      const dbUrl = new URL(DATABASE_URL);
+
+      return new Pool({
+        host: dbUrl.hostname,
+        port: Number(dbUrl.port || 5432),
+        database: dbUrl.pathname.replace('/', '') || 'postgres',
+        user: decodeURIComponent(dbUrl.username),
+        password: decodeURIComponent(dbUrl.password),
+        ssl: {
+          rejectUnauthorized: false
+        },
+        max: 5,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000
+      });
+    })()
   : null;
 
 // 强制放开跨域，避免 GitHub Pages -> Render 被浏览器拦截。
@@ -528,7 +538,58 @@ app.get('/api/regions', async (req, res) => {
 app.post('/api/sms/send', async (req, res) => {
   return fail(res, 501, '短信验证码服务尚未接入。下一期接入阿里云或腾讯云短信。');
 });
+// 获取官网页面内容，例如 /api/site/home
+app.get('/api/site/:slug', async (req, res) => {
+  const slug = req.params.slug;
 
+  if (!pool) {
+    return res.status(500).json({
+      ok: false,
+      message: '数据库未配置'
+    });
+  }
+
+  try {
+    const pageResult = await pool.query(
+      `
+      select slug, title, description, current_content, sort_order
+      from public.site_pages
+      where slug = $1
+      limit 1
+      `,
+      [slug]
+    );
+
+    if (pageResult.rows.length === 0) {
+      return res.status(404).json({
+        ok: false,
+        message: '页面不存在'
+      });
+    }
+
+    const sectionsResult = await pool.query(
+      `
+      select section_key, section_name, content, display_order
+      from public.site_sections
+      where page_slug = $1
+      order by display_order asc
+      `,
+      [slug]
+    );
+
+    return res.json({
+      ok: true,
+      page: pageResult.rows[0],
+      sections: sectionsResult.rows
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      message: '获取页面内容失败',
+      error: error.message
+    });
+  }
+});
 app.use((req, res) => {
   fail(res, 404, '接口不存在');
 });
@@ -545,3 +606,50 @@ ensureRootAdmin()
       console.log(`hailin alumni backend running without database init on http://localhost:${PORT}`);
     });
   });
+async function loadHomeContentFromApi() {
+  const apiBase = window.HAILIN_CONFIG?.API_BASE_URL || 'https://hailin-alumni-api.onrender.com';
+
+  try {
+    const res = await fetch(`${apiBase}/api/site/home?t=${Date.now()}`);
+    const data = await res.json();
+
+    if (!data.ok) {
+      console.warn('首页内容接口返回失败：', data);
+      return;
+    }
+
+    const sections = {};
+    data.sections.forEach(item => {
+      sections[item.section_key] = item.content;
+    });
+
+    const hero = sections.home_hero;
+    if (hero) {
+      const heroTitle = document.querySelector('.hero h1, .hero-title, h1');
+      const heroSubtitle = document.querySelector('.hero p, .hero-subtitle');
+
+      if (heroTitle && hero.title) heroTitle.textContent = hero.title;
+      if (heroSubtitle && hero.subtitle) heroSubtitle.textContent = hero.subtitle;
+    }
+
+    const notice = sections.home_notice;
+    if (notice) {
+      const noticeText = document.querySelector('.notice, .announcement, .home-notice');
+      if (noticeText && notice.text) noticeText.textContent = notice.text;
+    }
+
+    const stats = sections.home_stats;
+    if (stats) {
+      const statNumbers = document.querySelectorAll('.stat-number, .stats strong, .stats .number');
+      if (statNumbers.length >= 3) {
+        statNumbers[0].textContent = stats.founded || '1954';
+        statNumbers[1].textContent = stats.alumni || '30k+';
+        statNumbers[2].textContent = stats.regions || '12';
+      }
+    }
+  } catch (error) {
+    console.error('加载首页内容失败：', error);
+  }
+}
+
+loadHomeContentFromApi();
